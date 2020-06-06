@@ -1,11 +1,12 @@
 # django mongodbforms
 
 This is an implementation of django's model forms for mongoengine documents.
+Upgraded by Recrout in order to be used with current Django (3.0.5) and mongoengine (0.19.1).
 
 ## Requirements
 
-  * Django >= 1.4
-  * [mongoengine](http://mongoengine.org/) >= 0.8.3
+  * Django >= 3.0.5
+  * [mongoengine](http://mongoengine.org/) >= 0.19.1
 
 ## Supported field types
 
@@ -23,7 +24,7 @@ You can use any of the other supported fields inside list or map fields. Includi
 
 ## Usage
 
-mongodbforms supports forms for normal documents and embedded documents. 
+mongodbforms supports forms for normal documents and embedded documents.
 
 ### Normal documents
 
@@ -40,19 +41,19 @@ class BlogForm(DocumentForm)
 
 For embedded documents use `EmbeddedDocumentForm`. The Meta-object of the form has to be provided with an embedded field name. The embedded object is appended to this. The form constructor takes a couple of additional arguments: The document the embedded document gets added to and an optional position argument.
 
-If no position is provided the form adds a new embedded document to the list if the form is saved. To edit an embedded document stored in a list field the position argument is required. If you provide a position and no instance to the form the instance is automatically loaded using the position argument. 
+If no position is provided the form adds a new embedded document to the list if the form is saved. To edit an embedded document stored in a list field the position argument is required. If you provide a position and no instance to the form the instance is automatically loaded using the position argument.
 
 If the embedded field is a plain embedded field the current object is simply overwritten.
 
 ```python
 # forms.py
 from mongodbforms import EmbeddedDocumentForm
-    
+
 class MessageForm(EmbeddedDocumentForm):
     class Meta:
 	    document = Message
 	    embedded_field_name = 'messages'
-    
+
 	    fields = ['subject', 'sender', 'message',]
 
 # views.py
@@ -69,7 +70,7 @@ In theory the documentation [Django's modelform](https://docs.djangoproject.com/
 
 ### Form field generation
 
-Because the fields on mongoengine documents have no notion of form fields mongodbform uses a generator class to generate the form field for a db field, which is not explicitly set. 
+Because the fields on mongoengine documents have no notion of form fields mongodbform uses a generator class to generate the form field for a db field, which is not explicitly set.
 
 To use your own field generator you can either set a generator for your whole project using `MONGODBFORMS_FIELDGENERATOR` in settings.py or you can use the `formfield_generator` option on the form's Meta class.
 
@@ -83,15 +84,15 @@ MONGODBFORMS_FIELDGENERATOR = 'myproject.fieldgenerator.GeneratorClass'
 
 # generator.py
 from mongodbforms.fieldgenerator import MongoFormFieldGenerator
-	
+
 class MyFieldGenerator(MongoFormFieldGenerator):
 	...
 
 # forms.py
 from mongodbforms import DocumentForm
-	
+
 from generator import MyFieldGenerator
-	
+
 class MessageForm(DocumentForm):
     class Meta:
 		formfield_generator = MyFieldGenerator
