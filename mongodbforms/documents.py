@@ -8,7 +8,7 @@ from django.forms.forms import (BaseForm, DeclarativeFieldsMetaclass,
 from django.forms.widgets import media_property
 from django.core.exceptions import FieldError
 from django.core.validators import EMPTY_VALUES
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 from django.forms.formsets import BaseFormSet, formset_factory
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.utils.text import capfirst, get_valid_filename
@@ -223,6 +223,9 @@ def fields_for_document(document, fields=None, exclude=None, widgets=None,
     fields will be excluded from the returned fields, even if they are listed
     in the ``fields`` argument.
     """
+    field_dict = {}
+    ignored = [] # New in Django X.X, we are not going to use it here.
+    opts = document._meta
     field_list = []
     if isinstance(field_generator, type):
         field_generator = field_generator()
@@ -243,20 +246,24 @@ def fields_for_document(document, fields=None, exclude=None, widgets=None,
         else:
             kwargs = {}
 
+        default_formfield = field_generator.generate(f, **kwargs)
         if formfield_callback:
-            formfield = formfield_callback(f, **kwargs)
+            formfield = formfield_callback(f, field_generator, **kwargs)
         else:
             formfield = field_generator.generate(f, **kwargs)
-
         if formfield:
             field_list.append((f.name, formfield))
 
     field_dict = OrderedDict(field_list)
     if fields:
-        field_dict = OrderedDict(
-            [(f, field_dict.get(f)) for f in fields
-                if ((not exclude) or (exclude and f not in exclude))]
-        )
+        # field_dict = OrderedDict(
+        #     [(f, field_dict.get(f)) for f in fields
+        #         if ((not exclude) or (exclude and f not in exclude))]
+        # )
+        field_dict = {
+            f: field_dict.get(f) for f in fields
+            if (not exclude or f not in exclude) and f not in ignored
+        }
 
     return field_dict
 
@@ -295,7 +302,8 @@ class DocumentFormMetaclass(DeclarativeFieldsMetaclass):
             parents = [
                 b for b in bases
                 if issubclass(b, DocumentForm) or
-                issubclass(b, EmbeddedDocumentForm)
+                issubclass(b, EmbeddedDocumentForm) or
+                issubclass(b, BaseDocumentForm)
             ]
         except NameError:
             # We are defining DocumentForm itself.
@@ -344,7 +352,8 @@ class BaseDocumentForm(BaseForm):
 
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',
-                 empty_permitted=False, instance=None):
+                 empty_permitted=False, field_order=None,
+                 use_required_attribute=None, instance=None):
 
         opts = self._meta
 
@@ -361,14 +370,14 @@ class BaseDocumentForm(BaseForm):
         # if initial was provided, it should override the values from instance
         if initial is not None:
             object_data.update(initial)
-
         # self._validate_unique will be set to True by BaseModelForm.clean().
         # It is False by default so overriding self.clean() and failing to call
         # super will stop validate_unique from being called.
         self._validate_unique = False
         super(BaseDocumentForm, self).__init__(data, files, auto_id, prefix,
                                                object_data, error_class,
-                                               label_suffix, empty_permitted)
+                                               label_suffix, empty_permitted,
+                                               field_order, use_required_attribute)
 
     def _update_errors(self, message_dict):
         for k, v in list(message_dict.items()):
