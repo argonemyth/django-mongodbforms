@@ -13,5 +13,6 @@ class NgCharField(DefaultFieldMixin, mongo_fields.MongoCharField):
 class NgListField(DefaultFieldMixin, mongo_fields.ListField):
     pass
 
+
 class NgReferenceField(DefaultFieldMixin, mongo_fields.ReferenceField):
     pass

@@ -7,6 +7,12 @@ Upgraded by Recrout in order to be used with current Django (3.0.5) and mongoeng
 
   * Django >= 3.0.5
   * [mongoengine](http://mongoengine.org/) >= 0.19.1
+  * Django-angular == 2.2.4 (custom verson works with Django 3)
+
+## Recrout Update
+
+  * Made the app work with Django 3 and mongoengine 0.19.1
+  * Made it work with django-angular.
 
 ## Supported field types
 
